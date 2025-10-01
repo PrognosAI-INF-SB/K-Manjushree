@@ -2,11 +2,11 @@ import pandas as pd
 import numpy as np
 import os
 
-# ---- CONFIG ----
+
 DATASETS = ["FD001", "FD002", "FD003", "FD004"]
-RAW_PATH = "./processed_data"  # preprocessed CSV files folder
-SAVE_PATH = "./sequences_data"  # folder to save sequences
-WINDOW_SIZE = 30  # number of cycles per sequence
+RAW_PATH = "./processed_data" 
+SAVE_PATH = "./sequences_data"  
+WINDOW_SIZE = 30  
 
 os.makedirs(SAVE_PATH, exist_ok=True)
 
@@ -28,37 +28,38 @@ def create_sequences(df, window_size=30, feature_cols=None):
 for ds in DATASETS:
     print(f"\n--- Processing {ds} ---")
     
-    # Load preprocessed train, test, and RUL
+    
     train = pd.read_csv(f"{RAW_PATH}/train_{ds}_preprocessed.csv")
     test = pd.read_csv(f"{RAW_PATH}/test_{ds}_preprocessed.csv")
-    rul_test = pd.read_csv(f"{RAW_PATH}/RUL_{ds}.csv", header=None)  # ground truth for test
+    rul_test = pd.read_csv(f"{RAW_PATH}/RUL_{ds}.csv", header=None)  
     
-    # Identify feature columns (sensors + operational settings)
+    
     feature_cols = [c for c in train.columns if c not in ['unit_number', 'time_in_cycles', 'RUL']]
     
-    # ---- TRAIN sequences ----
+    
     X_train, y_train = create_sequences(train, window_size=WINDOW_SIZE, feature_cols=feature_cols)
     
-    # ---- TEST sequences ----
-    # First, append RUL to test based on RUL_FD00X.csv
+    
+    
     test_rul_full = []
     engine_ids = test['unit_number'].unique()
     for idx, eid in enumerate(engine_ids):
         engine_data = test[test['unit_number'] == eid].reset_index(drop=True)
-        true_rul = rul_test.iloc[idx, 0]  # RUL from file
+        true_rul = rul_test.iloc[idx, 0]  
         seq_length = len(engine_data)
-        # Compute RUL for each cycle in test engine
+        
         test_rul = np.arange(seq_length-1, -1, -1) + true_rul
         test_rul_full.extend(test_rul)
     
     test['RUL'] = test_rul_full
     X_test, y_test = create_sequences(test, window_size=WINDOW_SIZE, feature_cols=feature_cols)
     
-    # ---- Save sequences ----
+    
     np.save(f"{SAVE_PATH}/X_train_{ds}.npy", X_train)
     np.save(f"{SAVE_PATH}/y_train_{ds}.npy", y_train)
     np.save(f"{SAVE_PATH}/X_test_{ds}.npy", X_test)
     np.save(f"{SAVE_PATH}/y_test_{ds}.npy", y_test)
     
-    print(f"✅ {ds} sequences saved: X_train({X_train.shape}), y_train({y_train.shape}), X_test({X_test.shape}), y_test({y_test.shape})")
+    print(f" {ds} sequences saved: X_train({X_train.shape}), y_train({y_train.shape}), X_test({X_test.shape}), y_test({y_test.shape})")
+
 
