@@ -1,4 +1,4 @@
-# milestone4_full.py
+
 import os
 import numpy as np
 import pandas as pd
@@ -122,3 +122,4 @@ alert_df = pd.DataFrame(alerts, columns=["Sample_Index", "Predicted_RUL", "Alert
 alert_df.to_csv(os.path.join(results_folder, f"alerts_fd{fd_number}_milestone4.csv"), index=False)
 print(f"📢 Alerts saved to {results_folder}")
 print(alert_df.head(10))
+
